@@ -1,103 +1,82 @@
 var assert = require('assert');
 var async = require('async');
+var Promise = require('bluebird');
 
 var utils = require('./utils.js');
+Promise.promisifyAll(utils);
 var web3 = utils.web3;
-
-var accounts = null;
-
-before(function(done) {
-	web3.eth.getAccounts(function(err, acct) {
-		accounts = acct
-		done();
-	});
-});
+Promise.promisifyAll(web3.eth);
 
 describe('FIFSRegistrar', function() {
 	var registrarCode = null;
 	var registrar = null;
 	var ens = null;
+	var accounts = null;
 
+	before(function() {
+		return web3.eth.getAccountsAsync()
+			.then(acct => accounts = acct);
+	});
 
 	before(function() {
 		this.timeout(10000);
-		registrarCode = utils.compileContract(['interface.sol', 'FIFSRegistrar.sol']).contracts['FIFSRegistrar.sol:FIFSRegistrar'];
+		registrarCode = utils.compileContract(['AbstractENS.sol', 'FIFSRegistrar.sol']).contracts['FIFSRegistrar.sol:FIFSRegistrar'];
 	});
 
-	beforeEach(function(done) {
-		async.series([
-			function(done) { ens = utils.deployENS(accounts[0], done); },
-			function(done) {
-				registrar = web3.eth.contract(JSON.parse(registrarCode.interface)).new(
-				    ens.address,
-				    0,
-				    {
-				    	from: accounts[0],
-				     	data: registrarCode.bytecode,
-				     	gas: 4700000
-				   	}, function(err, contract) {
-				   		if(contract.address != undefined)
-				   	    	ens.setOwner(0, registrar.address, {from: accounts[0]}, done);
-				   	});
-			}],
-			done
-		);
+	beforeEach(function() {
+		this.timeout(4000);
+		return utils.deployENSAsync(accounts[0])
+			.then(function(_ens) {
+				ens = _ens;
+				return utils.promisifyContractFactory(
+						web3.eth.contract(JSON.parse(registrarCode.interface)))
+					.newAsync(
+						ens.address,
+						0,
+						{
+							from: accounts[0],
+							data: registrarCode.bytecode,
+							gas: 4700000
+						});
+			})
+			.then(contract => {
+				registrar = Promise.promisifyAll(contract);
+				return ens.setOwnerAsync(0, registrar.address, {from: accounts[0]});
+			});
 	});
 
-	it('registers names', function(done) {
-		async.series([
-			function(done) {
-				registrar.register(web3.sha3('eth'), accounts[0], {from: accounts[0]}, done);
-			},
-			function(done) {
-				ens.owner(0, function(err, address) {
-					assert.equal(err, null, err);
-					assert.equal(address, registrar.address);
-					done();
-				});
-			},
-			function(done) {
-				ens.owner(utils.node, function(err, address) {
-					assert.equal(err, null, err);
-					assert.equal(address, accounts[0]);
-					done();
-				});
-			}],
-			done
-		);
+	it('registers names', function() {
+		this.slow(300);
+		return registrar.registerAsync(web3.sha3('eth'), accounts[0], {from: accounts[0]})
+			.then(txHash => ens.ownerAsync(0))
+			.then(address => {
+				assert.equal(address, registrar.address);
+				return ens.ownerAsync(utils.node);
+			})
+			.then(address => assert.equal(address, accounts[0]));
 	});
 
-	it('transfers names', function(done) {
-		async.series([
-			function(done) {
-				registrar.register(web3.sha3('eth'), accounts[0], {from: accounts[0]}, done);
-			},
-			function(done) {
-				registrar.register(web3.sha3('eth'), accounts[1], {from: accounts[0]}, done);
-			},
-			function(done) {
-				ens.owner(utils.node, function(err, address) {
-					assert.equal(err, null, err);
-					assert.equal(address, accounts[1]);
-					done();
-				});
-			}],
-			done
-		);		
-	});
+	describe("transferring names", function() {
 
-	it('forbids transferring names you do not own', function(done) {
-		async.series([
-			function(done) {
-				registrar.register(web3.sha3('eth'), accounts[1], {from: accounts[0]}, done);
-			},
-			function(done) {
-				registrar.register(web3.sha3('eth'), accounts[0], {from: accounts[0]}, function(err, txid) {
-					assert.ok(err.toString().indexOf(utils.INVALID_JUMP) != -1, err);
-					done();
-				});
-			}],
-			done
-		);
+		beforeEach("register an unclaimed name", function() {
+			return registrar.registerAsync(web3.sha3('eth'), accounts[0], {from: accounts[0]})
+				.then(txHash => ens.ownerAsync(utils.node))
+				.then(address => assert.equal(address, accounts[0]));
+		});
+
+		it("transfers the name you own", function() {
+			this.slow(200);
+			return registrar.registerAsync(web3.sha3('eth'), accounts[1], {from: accounts[0]})
+				.then(txHash => ens.ownerAsync(utils.node))
+				.then(address => assert.equal(address, accounts[1]));
+		});
+
+		it('forbids transferring the name you do not own', function() {
+			return registrar.registerAsync(web3.sha3('eth'), accounts[1], {from: accounts[1]})
+				.then(
+					txHash => { throw(new Error("expected to be forbidden")); },
+					err => assert.ok(err, err)
+				);
+		});
 	});
 });

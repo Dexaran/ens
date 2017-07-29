@@ -90,12 +90,14 @@ A sample implementation in Python is provided below.
 ENS on Ethereum
 ===============
 
-ENS is deployed on mainnet at 0x314159265dd8dbb310642f98f50c066173c1259b_, where users may register names under the eth_ TLD, which uses an auction based registrar.
+ENS is deployed on mainnet at 0x314159265dd8dbb310642f98f50c066173c1259b_, where users may register names under the eth TLD, which uses an auction based registrar.
 
 ENS is also deployed on the Ropsten testnet at 0x112234455c3a32fd11230c42e7bccd4a84e02010_. Users may register names under two top level domains:
 
- - eth_, which uses an auction based registrar with the same functionality as the main network, and allows users to keep names indefinitely.
- - test_, which allows anyone to claim an unused name for test purposes, which expires after 28 days.
+ - .eth, which uses an auction based registrar with the same functionality as the main network, and allows users to keep names indefinitely; see :ref:`auctions`.
+ - .test, which allows anyone to claim an unused name for test purposes, which expires after 28 days; see :ref:`fifs`.
+
+ENS is also deployed on the Rinkeby testnet at 0xe7410170f87102df0055eb195163a03b7f2bff4a_, where only the .test top level domain is supported.
 
 Resources
 =========
@@ -105,12 +107,12 @@ Resources
  - ethereum-ens_ Javascript library
  - Nick's talk on ENS at DevCon 2: https://www.youtube.com/watch?v=pLDDbCZXvTE
  - DevCon 2 talk slides: https://arachnid.github.io/devcon2/#/title
+ - Web interface for Ethereum enabled browsers: https://registrar.ens.domains
 
 
- .. _0x112234455c3a32fd11230c42e7bccd4a84e02010: https://testnet.etherscan.io/address/0x112234455c3a32fd11230c42e7bccd4a84e02010
+ .. _0x112234455c3a32fd11230c42e7bccd4a84e02010: https://ropsten.etherscan.io/address/0x112234455c3a32fd11230c42e7bccd4a84e02010
  .. _0x314159265dd8dbb310642f98f50c066173c1259b: https://etherscan.io/address/0x314159265dd8dbb310642f98f50c066173c1259b
- .. _eth: auctions.html
- .. _test: testnames.html
+ .. _0xe7410170f87102df0055eb195163a03b7f2bff4a: https://rinkeby.etherscan.io/address/0xe7410170f87102df0055eb195163a03b7f2bff4a
  .. _EIP137: https://github.com/ethereum/EIPs/issues/137
  .. _EIP162: https://github.com/ethereum/EIPs/issues/162
  .. _ethereum-ens: https://www.npmjs.com/package/ethereum-ens

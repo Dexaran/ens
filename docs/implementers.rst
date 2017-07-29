@@ -9,7 +9,7 @@ Writing a resolver
 
 Resolvers are specified in EIP137_. A resolver must implement the following method:
 
-::
+.. code-block:: solidity
 
     function supportsInterface(bytes4 interfaceID) constant returns (bool)
 
@@ -22,12 +22,18 @@ Resolvers are specified in EIP137_. A resolver must implement the following meth
 +------------------+-------------+--------------+------------+
 | ENS Name         | `name`      | 0x691f3431   | EIP181_    |
 +------------------+-------------+--------------+------------+
+| ABI specification| `ABI`       | 0x2203ab56   | EIP205_    |
++------------------+-------------+--------------+------------+
+| Public key       | `pubkey`    | 0xc8690233   | EIP619_    |
++------------------+-------------+--------------+------------+
 
-Additionally, the `content()` interface is currently used as a defacto standard for Swarm hashes, pending stanardisation.
+`supportsInterface` must also return true for the `interfaceID` value `0x01ffc9a7`, which is the interface ID of `supportsInterface` itself.
+
+Additionally, the `content()` interface is currently used as a defacto standard for Swarm hashes, pending standardisation, and has an interface ID of `0xd8389dc5`.
 
 For example, a simple resolver that supports only the `addr` type might look something like this:
 
-::
+.. code-block:: solidity
 
     contract SimpleResolver {
         function supportsInterface(bytes4 interfaceID) constant returns (bool) {
@@ -41,12 +47,14 @@ For example, a simple resolver that supports only the `addr` type might look som
 
 This trivial resolver always returns its own address as answer to all queries. Practical resolvers may use any mechanism they wish to determine what results to return, though they should be `constant`, and should minimise gas usage wherever possible.
 
+NOTE: If you are resolving `addr()` records, you MUST treat a return value from the resolver of `0x00...00` as that record being unset. Failing to do so could result in users accidentally sending funds to the null address if they have configured a resolver in ENS, but not set the resolver record!
+
 Resolving names onchain
 =======================
 
 Solidity libraries for onchain resolution are not yet available, but ENS resolution is straightforward enough it can be done trivially without a library. Contracts may use the following interfaces:
 
-::
+.. code-block:: solidity
 
     contract ENS {
         function owner(bytes32 node) constant returns (address);
@@ -66,7 +74,7 @@ For resolution, only the `resolver()` function in the ENS contract is required; 
 
 With these definitions, looking up a name given its node hash is straightforward:
 
-::
+.. code-block:: solidity
 
     contract MyContract {
         ENS ens;
@@ -88,7 +96,7 @@ Writing a registrar
 
 A registrar in ENS is simply any contract that owns a name, and allocates subdomains of it according to some set of rules defined in the contract code. A trivial first in first served contract is demonstrated below, using the ENS interface definition defined earlier.
 
-::
+.. code-block:: solidity
 
     contract FIFSRegistrar {
         ENS ens;
@@ -102,8 +110,8 @@ A registrar in ENS is simply any contract that owns a name, and allocates subdom
         function register(bytes32 subnode, address owner) {
             var node = sha3(rootNode, subnode);
             var currentOwner = ens.owner(node);
-            if(currentOwner != 0 && currentOwner != msg.sender)
-                throw;
+
+            if (currentOwner != 0 && currentOwner != msg.sender) throw;
 
             ens.setSubnodeOwner(rootNode, subnode, owner);
         }
@@ -133,6 +141,8 @@ User agents and other software that display names to users should take counterme
 .. _EIP137: https://github.com/ethereum/EIPs/issues/137
 .. _EIP165: https://github.com/ethereum/EIPs/issues/165
 .. _EIP181: https://github.com/ethereum/EIPs/issues/181
+.. _EIP205: https://github.com/ethereum/EIPs/pull/205
+.. _EIP619: https://github.com/ethereum/EIPs/pull/619
 .. _ethereum-ens: https://www.npmjs.com/package/ethereum-ens
 .. _UTS46: http://unicode.org/reports/tr46/
 .. _`homoglyph attack`: https://en.wikipedia.org/wiki/Internationalized_domain_name#ASCII_spoofing_concerns

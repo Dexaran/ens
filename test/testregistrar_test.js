@@ -21,7 +21,7 @@ describe('FIFSRegistrar', function() {
 
     before(function() {
         this.timeout(10000);
-        registrarCode = utils.compileContract(['interface.sol', 'TestRegistrar.sol']).contracts['TestRegistrar.sol:TestRegistrar'];
+        registrarCode = utils.compileContract(['AbstractENS.sol', 'TestRegistrar.sol']).contracts['TestRegistrar.sol:TestRegistrar'];
     });
 
     beforeEach(function(done) {
@@ -36,7 +36,7 @@ describe('FIFSRegistrar', function() {
                         data: registrarCode.bytecode,
                         gas: 4700000
                     }, function(err, contract) {
-                        if(contract.address != undefined)
+                        if (contract.address != undefined)
                             ens.setOwner(0, registrar.address, {from: accounts[0]}, done);
                     });
             }],
@@ -74,7 +74,7 @@ describe('FIFSRegistrar', function() {
             },
             function(done) {
                 registrar.register(web3.sha3('eth'), accounts[0], {from: accounts[0]}, function(err, txid) {
-                    assert.ok(err.toString().indexOf(utils.INVALID_JUMP) != -1, err);
+                    assert.ok(err, err);
                     done();
                 });
             }],

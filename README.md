@@ -1,12 +1,15 @@
 # ENS
+
+[![Build Status](https://travis-ci.org/ethereum/ens.svg?branch=master)](https://travis-ci.org/ethereum/ens)
+
 Implementations for registrars and local resolvers for the Ethereum Name Service.
 
-For documentation of the ENS system, see [docs.ens.domains](http://docs.ens.domains/).
+For documentation of the ENS system, see [docs.ens.domains](https://docs.ens.domains/).
 
-To run unittests, clone this repository, and run:
+To run unit tests, clone this repository, and run:
 
-    npm install
-    npm test
+    $ npm install
+    $ npm test
 
 ## ENS.sol
 Implementation of the ENS Registry, the central contract used to look up resolvers and owners for domains.
@@ -25,7 +28,7 @@ Simple resolver implementation that allows the owner of any domain to configure 
 
 # ENS Registry interface
 
-The ENS registry is a single central contract that provides a mapping from domain names to owners and resolvers, as described in [EIP 137](https://github.com/ethereum/EIPs/issues/137). 
+The ENS registry is a single central contract that provides a mapping from domain names to owners and resolvers, as described in [EIP 137](https://github.com/ethereum/EIPs/issues/137).
 
 The ENS operates on 'nodes' instead of human-readable names; a human readable name is converted to a node using the namehash algorithm, which is as follows:
 
@@ -67,12 +70,31 @@ Returns true iff the specified node has the specified record kind available. Rec
 
 Implements the addr resource type. Returns the Ethereum address associated with a node if it exists, or `throw`s if it does not.
 
-# Generating ABI and binary data
+# Generating LLL ABI and binary data
 
 ENS.lll.bin was generated with the following command, using the lllc packaged with Solidity 0.4.4:
 
-    lllc ENS.lll > ENS.lll.bin
+    $ lllc ENS.lll > ENS.lll.bin
 
 The files in the abi directory were generated with the following command:
 
-    solc --abi -o abi interface.sol FIFSRegistrar.sol HashRegistrarSimplified.sol PublicResolver.sol
+    $ solc --abi -o abi AbstractENS.sol FIFSRegistrar.sol HashRegistrarSimplified.sol PublicResolver.sol
+
+# Getting started
+Install Truffle
+
+	$ npm install -g truffle
+
+Launch the RPC client, for example TestRPC:
+
+	$ testrpc
+
+Deploy `ENS` and `FIFSRegistrar` to the private network, the deployment process is defined at [here](migrations/2_deploy_contracts.js):
+
+	$ truffle migrate --network dev.fifs
+
+alternatively, deploy the `HashRegistrar`:
+
+	$ truffle migrate --network dev.auction
+
+Check the truffle [documentation](http://truffleframework.com/docs/) for more information.
